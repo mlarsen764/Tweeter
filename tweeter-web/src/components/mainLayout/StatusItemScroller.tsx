@@ -1,30 +1,37 @@
-import { useContext } from "react";
-import {
-  UserInfoContext,
-  UserInfoActionsContext,
-} from "../userInfo/UserInfoContexts";
 import { AuthToken, FakeData, Status, User } from "tweeter-shared";
 import { useState, useEffect } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { ToastActionsContext } from "../toaster/ToastContexts";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { ToastType } from "../toaster/Toast";
+import { useParams } from "react-router-dom";
+import { useMessageActions } from "../toaster/MessageHooks";
 import StatusItem from "../statusItem/StatusItem";
+import { useUserInfo, useUserInfoActions } from "../userInfo/UserInfoHooks";
+import { useUserNavigationHook } from "../userItem/UserNavigationHook";
 
 export const PAGE_SIZE = 10;
 
-const FeedScroller = () => {
-  const { displayToast } = useContext(ToastActionsContext);
+interface Props {
+  itemDescription: string;
+  featureUrl: string;
+  loadMore: (
+    authToken: AuthToken,
+    userAlias: string,
+    pageSize: number,
+    lastItem: Status | null,
+  ) => Promise<[Status[], boolean]>;
+}
+
+const StatusItemScroller = (props: Props) => {
+  const { displayErrorMessage } = useMessageActions();
   const [items, setItems] = useState<Status[]>([]);
   const [hasMoreItems, setHasMoreItems] = useState(true);
   const [lastItem, setLastItem] = useState<Status | null>(null);
-  const navigate = useNavigate();
+  const { navigateToUser } = useUserNavigationHook(props.featureUrl);
 
   const addItems = (newItems: Status[]) =>
     setItems((previousItems) => [...previousItems, ...newItems]);
 
-  const { displayedUser, authToken } = useContext(UserInfoContext);
-  const { setDisplayedUser } = useContext(UserInfoActionsContext);
+  const { displayedUser, authToken } = useUserInfo();
+  const { setDisplayedUser } = useUserInfoActions();
   const { displayedUser: displayedUserAliasParam } = useParams();
 
   // Update the displayed user context variable whenever the displayedUser url parameter changes. This allows browser forward and back buttons to work correctly.
@@ -56,66 +63,26 @@ const FeedScroller = () => {
 
   const loadMoreItems = async (lastItem: Status | null) => {
     try {
-      const [newItems, hasMore] = await loadMoreFeedItems(
+      const [newItems, hasMore] = await props.loadMore(
         authToken!,
         displayedUser!.alias,
         PAGE_SIZE,
-        lastItem
+        lastItem,
       );
 
       setHasMoreItems(() => hasMore);
       setLastItem(() => newItems[newItems.length - 1]);
       addItems(newItems);
     } catch (error) {
-      displayToast(
-        ToastType.Error,
-        `Failed to load feed items because of exception: ${error}`,
-        0
+      displayErrorMessage(
+        `Failed to load ${props.itemDescription} items because of exception: ${error}`,
       );
     }
-  };
-
-  const loadMoreFeedItems = async (
-    authToken: AuthToken,
-    userAlias: string,
-    pageSize: number,
-    lastItem: Status | null
-  ): Promise<[Status[], boolean]> => {
-    // TODO: Replace with the result of calling server
-    return FakeData.instance.getPageOfStatuses(lastItem, pageSize);
-  };
-
-  const navigateToUser = async (event: React.MouseEvent): Promise<void> => {
-    event.preventDefault();
-
-    try {
-      const alias = extractAlias(event.target.toString());
-
-      const toUser = await getUser(authToken!, alias);
-
-      if (toUser) {
-        if (!toUser.equals(displayedUser!)) {
-          setDisplayedUser(toUser);
-          navigate(`/feed/${toUser.alias}`);
-        }
-      }
-    } catch (error) {
-      displayToast(
-        ToastType.Error,
-        `Failed to get user because of exception: ${error}`,
-        0
-      );
-    }
-  };
-
-  const extractAlias = (value: string): string => {
-    const index = value.indexOf("@");
-    return value.substring(index);
   };
 
   const getUser = async (
     authToken: AuthToken,
-    alias: string
+    alias: string,
   ): Promise<User | null> => {
     // TODO: Replace with the result of calling server
     return FakeData.instance.findUserByAlias(alias);
@@ -134,7 +101,7 @@ const FeedScroller = () => {
           <StatusItem
             key={index}
             status={item}
-            featurePath="/feed"
+            featurePath={props.featureUrl}
             onNavigateToUser={navigateToUser}
           />
         ))}
@@ -143,4 +110,4 @@ const FeedScroller = () => {
   );
 };
 
-export default FeedScroller;
+export default StatusItemScroller;
