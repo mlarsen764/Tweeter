@@ -36,6 +36,7 @@ const PostStatus = () => {
     }
   };
 
+  // move to service class
   const postStatus = async (
     authToken: AuthToken,
     newStatus: Status,

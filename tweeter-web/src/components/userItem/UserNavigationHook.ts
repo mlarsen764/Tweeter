@@ -1,3 +1,5 @@
+//Todo: most of this can be moved to presenter
+
 import { useNavigate } from "react-router-dom";
 import { AuthToken, User, FakeData } from "tweeter-shared";
 import { useMessageActions } from "../toaster/MessageHooks";
