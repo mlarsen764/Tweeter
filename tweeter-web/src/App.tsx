@@ -100,28 +100,21 @@ const UnauthenticatedRoutes = () => {
   );
 };
 
-const createRoute = <T,>(featureUrl: string, presenterFactory: (view: PagedItemView<T>) => any, renderItem: (item: T, index: number, featureUrl: string) => JSX.Element) => () => (
-  <ItemScroller<T>
-    featureUrl={featureUrl}
-    presenterFactory={presenterFactory}
-    renderItem={renderItem}
-  />
-);
-
-const renderStatus = (status: Status, index: number, featureUrl: string) => {
+const ItemRoute = <T,>({ featureUrl, presenterFactory, renderItem }: { featureUrl: string, presenterFactory: (view: PagedItemView<T>) => any, renderItem: (item: T, index: number, featureUrl: string, navigateToUser?: (event: React.MouseEvent) => Promise<void>) => JSX.Element }) => {
   const { navigateToUser } = useUserNavigationHook(featureUrl);
-  return <StatusItem key={index} status={status} featurePath={featureUrl} onNavigateToUser={navigateToUser} />;
+  
+  return (
+    <ItemScroller<T>
+      featureUrl={featureUrl}
+      presenterFactory={presenterFactory}
+      renderItem={(item, index, featureUrl) => renderItem(item, index, featureUrl, navigateToUser)}
+    />
+  );
 };
 
-const renderUser = (user: User, index: number, featureUrl: string) => (
-  <div key={index} className="row mb-3 mx-0 px-0 border rounded bg-white">
-    <UserItem user={user} featurePath={featureUrl} />
-  </div>
-);
-
-const FeedRoute = createRoute("/feed", (view: PagedItemView<Status>) => new FeedPresenter(view), renderStatus);
-const StoryRoute = createRoute("/story", (view: PagedItemView<Status>) => new StoryPresenter(view), renderStatus);
-const FolloweesRoute = createRoute("/followees", (view: PagedItemView<User>) => new FolloweePresenter(view), renderUser);
-const FollowersRoute = createRoute("/followers", (view: PagedItemView<User>) => new FollowerPresenter(view), renderUser);
+const FeedRoute = () => <ItemRoute<Status> featureUrl="/feed" presenterFactory={(view: PagedItemView<Status>) => new FeedPresenter(view)} renderItem={(status, index, featureUrl, navigateToUser) => <StatusItem key={index} status={status} featurePath={featureUrl} onNavigateToUser={navigateToUser!} />} />;
+const StoryRoute = () => <ItemRoute<Status> featureUrl="/story" presenterFactory={(view: PagedItemView<Status>) => new StoryPresenter(view)} renderItem={(status, index, featureUrl, navigateToUser) => <StatusItem key={index} status={status} featurePath={featureUrl} onNavigateToUser={navigateToUser!} />} />;
+const FolloweesRoute = () => <ItemRoute<User> featureUrl="/followees" presenterFactory={(view: PagedItemView<User>) => new FolloweePresenter(view)} renderItem={(user, index) => <div key={index} className="row mb-3 mx-0 px-0 border rounded bg-white"><UserItem user={user} featurePath="/followees" /></div>} />;
+const FollowersRoute = () => <ItemRoute<User> featureUrl="/followers" presenterFactory={(view: PagedItemView<User>) => new FollowerPresenter(view)} renderItem={(user, index) => <div key={index} className="row mb-3 mx-0 px-0 border rounded bg-white"><UserItem user={user} featurePath="/followers" /></div>} />;
 
 export default App;
