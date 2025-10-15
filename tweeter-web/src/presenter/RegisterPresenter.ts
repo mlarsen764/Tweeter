@@ -11,7 +11,12 @@ export interface RegisterView extends AuthenticationView {
 }
 
 export class RegisterPresenter extends AuthenticationPresenter<RegisterView> {
-  private userService = new UserService();
+  private userService: UserService;
+
+  public constructor(view: RegisterView) {
+    super(view);
+    this.userService = new UserService();
+  }
 
   public checkSubmitButtonStatus(
     firstName: string,

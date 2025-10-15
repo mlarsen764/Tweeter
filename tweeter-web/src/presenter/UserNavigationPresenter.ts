@@ -7,7 +7,12 @@ export interface UserNavigationView extends NavigationView {
 }
 
 export class UserNavigationPresenter extends Presenter<UserNavigationView> {
-  private userService = new UserService();
+  private userService: UserService;
+
+  public constructor(view: UserNavigationView) {
+    super(view);
+    this.userService = new UserService();
+  }
 
   public async navigateToUser(
     event: React.MouseEvent,
