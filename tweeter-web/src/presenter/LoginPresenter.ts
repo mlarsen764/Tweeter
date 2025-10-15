@@ -7,12 +7,7 @@ export interface LoginView extends AuthenticationView {
 }
 
 export class LoginPresenter extends AuthenticationPresenter<LoginView> {
-  private userService: UserService;
-
-  public constructor(view: LoginView) {
-    super(view);
-    this.userService = new UserService();
-  }
+  private userService = new UserService();
 
   public async doLogin(alias: string, password: string, rememberMe: boolean, originalUrl?: string): Promise<void> {
     await this.doAuthenticationOperation(
