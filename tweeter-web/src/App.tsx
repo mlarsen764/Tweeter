@@ -10,14 +10,18 @@ import Login from "./components/authentication/login/Login";
 import Register from "./components/authentication/register/Register";
 import MainLayout from "./components/mainLayout/MainLayout";
 import Toaster from "./components/toaster/Toaster";
-import UserItemScroller from "./components/mainLayout/UserItemScroller";
-import StatusItemScroller from "./components/mainLayout/StatusItemScroller";
+import ItemScroller from "./components/mainLayout/ItemScroller";
+import StatusItem from "./components/statusItem/StatusItem";
+import UserItem from "./components/userItem/UserItem";
+import { useUserNavigationHook } from "./components/userItem/UserNavigationHook";
 import { useUserInfo } from "./components/userInfo/UserInfoHooks";
 import { FolloweePresenter } from "./presenter/FolloweePresenter";
-import { UserItemView } from "./presenter/UserItemPresenter";
 import { FollowerPresenter } from "./presenter/FollowerPresenter";
 import { FeedPresenter } from "./presenter/FeedPresenter";
-import { StatusItemView } from "./presenter/StatusItemPresenter";
+import { StoryPresenter } from "./presenter/StoryPresenter";
+import { Status } from "tweeter-shared/dist/model/domain/Status";
+import { PagedItemView } from "./presenter/PagedItemPresenter";
+import { User } from "tweeter-shared/dist/model/domain/User";
 
 const App = () => {
   const { currentUser, authToken } = useUserInfo();
@@ -53,41 +57,25 @@ const AuthenticatedRoutes = () => {
         <Route
           path="feed/:displayedUser"
           element={
-            <StatusItemScroller
-              key={`feed-${displayedUser!.alias}`}
-              featureUrl="/feed"
-              presenterFactory={(view: StatusItemView) => new FeedPresenter(view)}
-            />
+            <FeedRoute key={`feed-${displayedUser!.alias}`} />
           }
         />
         <Route
           path="story/:displayedUser"
           element={
-            <StatusItemScroller
-              key={`story-${displayedUser!.alias}`}
-              featureUrl="/story"
-              presenterFactory={(view: StatusItemView) => new FeedPresenter(view)}
-            />
+            <StoryRoute key={`story-${displayedUser!.alias}`} />
           }
         />
         <Route
           path="followees/:displayedUser"
           element={
-            <UserItemScroller
-              key={`followees-${displayedUser!.alias}`}
-              featureUrl="/followees"
-              presenterFactory={(view: UserItemView) => new FolloweePresenter(view)}
-            />
+            <FolloweesRoute key={`followees-${displayedUser!.alias}`} />
           }
         />
         <Route
           path="followers/:displayedUser"
           element={
-            <UserItemScroller
-              key={`followers-${displayedUser!.alias}`}
-              featureUrl="/followers"
-              presenterFactory={(view: UserItemView) => new FollowerPresenter(view)}
-            />
+            <FollowersRoute key={`followers-${displayedUser!.alias}`} />
           }
         />
         <Route path="logout" element={<Navigate to="/login" />} />
@@ -111,5 +99,29 @@ const UnauthenticatedRoutes = () => {
     </Routes>
   );
 };
+
+const createRoute = <T,>(featureUrl: string, presenterFactory: (view: PagedItemView<T>) => any, renderItem: (item: T, index: number, featureUrl: string) => JSX.Element) => () => (
+  <ItemScroller<T>
+    featureUrl={featureUrl}
+    presenterFactory={presenterFactory}
+    renderItem={renderItem}
+  />
+);
+
+const renderStatus = (status: Status, index: number, featureUrl: string) => {
+  const { navigateToUser } = useUserNavigationHook(featureUrl);
+  return <StatusItem key={index} status={status} featurePath={featureUrl} onNavigateToUser={navigateToUser} />;
+};
+
+const renderUser = (user: User, index: number, featureUrl: string) => (
+  <div key={index} className="row mb-3 mx-0 px-0 border rounded bg-white">
+    <UserItem user={user} featurePath={featureUrl} />
+  </div>
+);
+
+const FeedRoute = createRoute("/feed", (view: PagedItemView<Status>) => new FeedPresenter(view), renderStatus);
+const StoryRoute = createRoute("/story", (view: PagedItemView<Status>) => new StoryPresenter(view), renderStatus);
+const FolloweesRoute = createRoute("/followees", (view: PagedItemView<User>) => new FolloweePresenter(view), renderUser);
+const FollowersRoute = createRoute("/followers", (view: PagedItemView<User>) => new FollowerPresenter(view), renderUser);
 
 export default App;
