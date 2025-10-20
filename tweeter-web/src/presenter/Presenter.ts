@@ -37,7 +37,7 @@ export abstract class Presenter<V extends View> {
       await operation();
     } catch (error) {
       this.view.displayErrorMessage(
-        `Failed to ${operationDescription} because of exception: ${error}`,
+        `Failed to ${operationDescription} because of exception: ${(error as Error).message}`,
       );
     }
   }
@@ -51,7 +51,7 @@ export abstract class Presenter<V extends View> {
       await operation();
     } catch (error) {
       this.view.displayErrorMessage(
-        `Failed to ${operationDescription} because of exception: ${error}`,
+        `Failed to ${operationDescription} because of exception: ${(error as Error).message}`,
       );
     } finally {
       cleanup();
