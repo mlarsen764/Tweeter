@@ -1,0 +1,4 @@
+/node_modules
+/dist
+/nodejs
+layer/nodejs/node_modules
