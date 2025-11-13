@@ -3,10 +3,10 @@ import { UserService } from "../../model/service/UserService";
 
 export const handler = async (request: LogoutRequest): Promise<LogoutResponse> => {
   const userService = new UserService();
-  await userService.logout(AuthToken.fromJson(request.token)!);
+  await userService.logout(request.token);
 
   return {
     success: true,
-    message: null
+    message: "Logged Out"
   }
 }

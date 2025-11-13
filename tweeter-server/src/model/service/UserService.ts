@@ -3,7 +3,7 @@ import { AuthToken, User, FakeData } from "tweeter-shared";
 export class UserService {
 
   public async getUser(
-    authToken: AuthToken,
+    token: string,
     alias: string
   ): Promise<User | null> {
     // TODO: Replace with the result of calling server
@@ -39,7 +39,7 @@ export class UserService {
     return [user, FakeData.instance.authToken];
   }
 
-  public async logout(authToken: AuthToken): Promise<void> {
+  public async logout(token: string): Promise<void> {
     // Pause so we can see the logging out message. Delete when the call to the server is implemented.
     await new Promise((res) => setTimeout(res, 1000));
     // TODO: Call the server to logout
