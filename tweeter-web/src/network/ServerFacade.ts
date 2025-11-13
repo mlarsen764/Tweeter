@@ -28,7 +28,7 @@ import {
 import { ClientCommunicator } from "./ClientCommunicator";
 
 export class ServerFacade {
-  private SERVER_URL = "https://your-api-gateway-url.amazonaws.com/prod";
+  private SERVER_URL = "https://q0iodg5ev5.execute-api.us-west-2.amazonaws.com/Stage";
   private clientCommunicator = new ClientCommunicator(this.SERVER_URL);
 
   // User operations
@@ -219,7 +219,14 @@ export class ServerFacade {
     const response = await this.clientCommunicator.doPost<PagedStatusItemRequest, PagedStatusItemResponse>(
       request, "/status/loadfeeditems"
     );
-    return [response.items.map(dto => Status.fromDto(dto)!), response.hasMore];
+    
+    if (response.success) {
+      const items = response.items ? response.items.map(dto => Status.fromDto(dto)).filter(status => status !== null) as Status[] : [];
+      return [items, response.hasMore];
+    } else {
+      console.error(response);
+      throw new Error(response.message ?? 'Failed to load feed items');
+    }
   }
 
   async loadMoreStoryItems(
@@ -237,7 +244,14 @@ export class ServerFacade {
     const response = await this.clientCommunicator.doPost<PagedStatusItemRequest, PagedStatusItemResponse>(
       request, "/status/loadstoryitems"
     );
-    return [response.items.map(dto => Status.fromDto(dto)!), response.hasMore];
+    
+    if (response.success) {
+      const items = response.items ? response.items.map(dto => Status.fromDto(dto)).filter(status => status !== null) as Status[] : [];
+      return [items, response.hasMore];
+    } else {
+      console.error(response);
+      throw new Error(response.message ?? 'Failed to load story items');
+    }
   }
 
   async postStatus(authToken: AuthToken, newStatus: Status): Promise<void> {

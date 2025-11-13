@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm run compile",
     "compile": "npm run clean && tsc",
-    "clean": "rimraf dist"
+    "clean": "if exist dist rmdir /s /q dist"
   },
   "keywords": [],
   "author": "",

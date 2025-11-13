@@ -9,7 +9,7 @@
     "build": "vite build && npm run compile",
     "preview": "vite preview",
     "compile": "npm run clean && tsc",
-    "clean": "rimraf dist"
+    "clean": "if exist dist rmdir /s /q dist"
   },
   "devDependencies": {
     "typescript": "^5.0.2",
