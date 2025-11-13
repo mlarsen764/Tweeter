@@ -13,7 +13,8 @@ export type { UserDto } from "./model/dto/UserDto";
 export type { StatusDto } from "./model/dto/StatusDto";
 
 // Base Types
-export type { TweeterRequest } from "./model/net/TweeterRequest";
+export type { TweeterRequest } from "./model/net/request/TweeterRequest";
+export type { TweeterResponse } from "./model/net/response/TweeterResponse";
 
 // Requests
 export type { PagedUserItemRequest } from "./model/net/request/PagedUserItemRequest";

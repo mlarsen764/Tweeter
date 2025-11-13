@@ -64,7 +64,7 @@ export class ServerFacade {
       lastName,
       alias,
       password,
-      userImageBytes: Buffer.from(userImageBytes).toString('base64'),
+      userImageBytes: btoa(String.fromCharCode(...userImageBytes)),
       imageFileExtension
     };
     const response = await this.clientCommunicator.doPost<RegisterRequest, RegisterResponse>(
