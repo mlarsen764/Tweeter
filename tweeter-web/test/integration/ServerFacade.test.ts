@@ -14,12 +14,11 @@ describe("ServerFacade Integration Tests", () => {
   beforeAll(async () => {
     serverFacade = new ServerFacade();
     
-    // Register a real user to get valid token and user for other tests
-    const uniqueAlias = "@testuser" + Date.now();
+    // Register a user to get valid token and user for other tests
     [testUser, testAuthToken] = await serverFacade.register(
       "Test",
       "User",
-      uniqueAlias,
+      "@testuser",
       "password123",
       new Uint8Array([1, 2, 3]),
       "jpg"

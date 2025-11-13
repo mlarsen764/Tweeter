@@ -2,8 +2,6 @@ import {
   AuthToken, 
   User, 
   Status,
-  UserDto,
-  StatusDto,
   LoginRequest,
   LoginResponse,
   RegisterRequest,
