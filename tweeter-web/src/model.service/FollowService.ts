@@ -12,7 +12,7 @@ export class FollowService implements Service {
     lastItem: User | null
   ): Promise<[User[], boolean]> {
     const request: PagedUserItemRequest = {
-      token: authToken.toJson(),
+      token: authToken.token,
       userAlias,
       pageSize,
       lastItem: lastItem ? lastItem.dto : null
@@ -27,7 +27,7 @@ export class FollowService implements Service {
     lastItem: User | null
   ): Promise<[User[], boolean]> {
     const request: PagedUserItemRequest = {
-      token: authToken.toJson(),
+      token: authToken.token,
       userAlias,
       pageSize,
       lastItem: lastItem ? lastItem.dto : null
@@ -41,7 +41,7 @@ export class FollowService implements Service {
     selectedUser: User,
   ): Promise<boolean> {
     const request: IsFollowerRequest = {
-      token: authToken.toJson(),
+      token: authToken.token,
       user: user.dto,
       selectedUser: selectedUser.dto
     };
@@ -52,27 +52,31 @@ export class FollowService implements Service {
     authToken: AuthToken,
     user: User,
   ): Promise<number> {
-    return this.serverFacade.getFolloweeCount(authToken, user);
+    const token = authToken.token
+    return this.serverFacade.getFolloweeCount(token, user);
   }
 
   public async getFollowerCount(
     authToken: AuthToken,
     user: User,
   ): Promise<number> {
-    return this.serverFacade.getFollowerCount(authToken, user);
+    const token = authToken.token
+    return this.serverFacade.getFollowerCount(token, user);
   }
 
   public async follow(
     authToken: AuthToken,
     userToFollow: User,
   ): Promise<[followerCount: number, followeeCount: number]> {
-    return this.serverFacade.follow(authToken, userToFollow);
+    const token = authToken.token
+    return this.serverFacade.follow(token, userToFollow);
   }
 
   public async unfollow(
     authToken: AuthToken,
     userToUnfollow: User,
   ): Promise<[followerCount: number, followeeCount: number]> {
-    return this.serverFacade.unfollow(authToken, userToUnfollow);
+    const token = authToken.token
+    return this.serverFacade.unfollow(token, userToUnfollow);
   }
 }

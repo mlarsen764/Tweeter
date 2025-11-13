@@ -1,6 +1,6 @@
 import { StatusService } from "../../src/model.service/StatusService";
 import { ServerFacade } from "../../src/network/ServerFacade";
-import { AuthToken, User, Status } from "tweeter-shared";
+import { User, Status, AuthToken } from "tweeter-shared";
 import "isomorphic-fetch";
 
 describe("StatusService Integration Tests", () => {
@@ -11,17 +11,18 @@ describe("StatusService Integration Tests", () => {
   beforeAll(async () => {
     statusService = new StatusService();
     
-    // Register a real user to get valid token
+    // Register user
     const serverFacade = new ServerFacade();
-    const uniqueAlias = "@storyuser" + Date.now();
-    [user, authToken] = await serverFacade.register(
+    const [userResult, tokenString] = await serverFacade.register(
       "Story",
       "User",
-      uniqueAlias,
+      "@storyuser",
       "password123",
       new Uint8Array([1, 2, 3]),
       "jpg"
     );
+    user = userResult;
+    authToken = new AuthToken(tokenString, Date.now());
   });
 
   test("loadMoreStoryItems - should successfully retrieve story pages", async () => {

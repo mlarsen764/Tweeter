@@ -1,5 +1,4 @@
 import { 
-  AuthToken, 
   User, 
   Status,
   LoginRequest,
@@ -30,16 +29,15 @@ export class ServerFacade {
   private clientCommunicator = new ClientCommunicator(this.SERVER_URL);
 
   // User operations
-  public async login(request: LoginRequest): Promise<[User, AuthToken]> {
+  public async login(request: LoginRequest): Promise<[User, string]> {
     const response = await this.clientCommunicator.doPost<LoginRequest, LoginResponse>(
       request, "/user/login"
     );
 
     if (response.success) {
       const user = User.fromDto(response.user);
-      const authToken = AuthToken.fromJson(response.token);
-      if (user && authToken) {
-        return [user, authToken];
+      if (user && response.token) {
+        return [user, response.token];
       } else {
         throw new Error('Invalid login response');
       }
@@ -56,23 +54,29 @@ export class ServerFacade {
     password: string,
     userImageBytes: Uint8Array,
     imageFileExtension: string
-  ): Promise<[User, AuthToken]> {
+  ): Promise<[User, string]> {
     const request: RegisterRequest = {
       firstName,
       lastName,
       alias,
       password,
-      userImageBytes: btoa(String.fromCharCode(...userImageBytes)),
+      userImageBytes: (() => {
+        let binary = '';
+        for (let i = 0; i < userImageBytes.length; i++) {
+          binary += String.fromCharCode(userImageBytes[i]);
+        }
+        return btoa(binary);
+      })(),
       imageFileExtension
     };
     const response = await this.clientCommunicator.doPost<RegisterRequest, RegisterResponse>(
       request, "/user/create"
     );
-    return [User.fromDto(response.user)!, AuthToken.fromJson(response.token)!];
+    return [User.fromDto(response.user)!, response.token];
   }
 
-  async logout(authToken: AuthToken): Promise<void> {
-    const request: LogoutRequest = { token: authToken.toJson() };
+  async logout(token: string): Promise<void> {
+    const request: LogoutRequest = { token };
     await this.clientCommunicator.doPost<LogoutRequest, LogoutResponse>(
       request, "/user/logout"
     );
@@ -157,9 +161,9 @@ export class ServerFacade {
     }
   }
 
-  async getFolloweeCount(authToken: AuthToken, user: User): Promise<number> {
+  async getFolloweeCount(token: string, user: User): Promise<number> {
     const request: FollowCountRequest = {
-      token: authToken.toJson(),
+      token,
       user: user.dto
     };
     const response = await this.clientCommunicator.doPost<FollowCountRequest, FollowCountResponse>(
@@ -168,9 +172,9 @@ export class ServerFacade {
     return response.count;
   }
 
-  async getFollowerCount(authToken: AuthToken, user: User): Promise<number> {
+  async getFollowerCount(token: string, user: User): Promise<number> {
     const request: FollowCountRequest = {
-      token: authToken.toJson(),
+      token,
       user: user.dto
     };
     const response = await this.clientCommunicator.doPost<FollowCountRequest, FollowCountResponse>(
@@ -179,9 +183,9 @@ export class ServerFacade {
     return response.count;
   }
 
-  async follow(authToken: AuthToken, userToFollow: User): Promise<[number, number]> {
+  async follow(token: string, userToFollow: User): Promise<[number, number]> {
     const request: FollowRequest = {
-      token: authToken.toJson(),
+      token,
       userToFollow: userToFollow.dto
     };
     const response = await this.clientCommunicator.doPost<FollowRequest, FollowResponse>(
@@ -190,9 +194,9 @@ export class ServerFacade {
     return [response.followerCount, response.followeeCount];
   }
 
-  async unfollow(authToken: AuthToken, userToUnfollow: User): Promise<[number, number]> {
+  async unfollow(token: string, userToUnfollow: User): Promise<[number, number]> {
     const request: FollowRequest = {
-      token: authToken.toJson(),
+      token,
       userToFollow: userToUnfollow.dto
     };
     const response = await this.clientCommunicator.doPost<FollowRequest, FollowResponse>(
@@ -203,13 +207,13 @@ export class ServerFacade {
 
   // Status operations
   async loadMoreFeedItems(
-    authToken: AuthToken,
+    token: string,
     userAlias: string,
     pageSize: number,
     lastItem: Status | null
   ): Promise<[Status[], boolean]> {
     const request: PagedStatusItemRequest = {
-      token: authToken.toJson(),
+      token,
       userAlias,
       pageSize,
       lastItem: lastItem ? lastItem.dto : null
@@ -228,13 +232,13 @@ export class ServerFacade {
   }
 
   async loadMoreStoryItems(
-    authToken: AuthToken,
+    token: string,
     userAlias: string,
     pageSize: number,
     lastItem: Status | null
   ): Promise<[Status[], boolean]> {
     const request: PagedStatusItemRequest = {
-      token: authToken.toJson(),
+      token,
       userAlias,
       pageSize,
       lastItem: lastItem ? lastItem.dto : null
@@ -252,9 +256,9 @@ export class ServerFacade {
     }
   }
 
-  async postStatus(authToken: AuthToken, newStatus: Status): Promise<void> {
+  async postStatus(token: string, newStatus: Status): Promise<void> {
     const request: PostStatusRequest = {
-      token: authToken.toJson(),
+      token,
       newStatus: newStatus.dto
     };
     await this.clientCommunicator.doPost<PostStatusRequest, PostStatusResponse>(

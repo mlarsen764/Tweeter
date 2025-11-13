@@ -1,15 +1,14 @@
 import { ServerFacade } from "../../src/network/ServerFacade";
 import { 
   PagedUserItemRequest,
-  User,
-  AuthToken
+  User
 } from "tweeter-shared";
 import "isomorphic-fetch";
 
 describe("ServerFacade Integration Tests", () => {
   let serverFacade: ServerFacade;
   let testUser: User;
-  let testAuthToken: AuthToken;
+  let testAuthToken: string;
 
   beforeAll(async () => {
     serverFacade = new ServerFacade();
@@ -26,17 +25,16 @@ describe("ServerFacade Integration Tests", () => {
   });
 
   test("Register - should successfully register a new user", async () => {
-    // This test uses the user registered in beforeAll
     expect(testUser).toBeInstanceOf(User);
     expect(typeof testUser.firstName).toBe("string");
     expect(typeof testUser.lastName).toBe("string");
     expect(typeof testUser.alias).toBe("string");
-    expect(testAuthToken).toBeInstanceOf(AuthToken);
+    expect(typeof testAuthToken).toBe("string");
   });
 
   test("GetFollowers - should return followers list", async () => {
     const request: PagedUserItemRequest = {
-      token: testAuthToken.toJson(),
+      token: testAuthToken,
       userAlias: testUser.alias,
       pageSize: 10,
       lastItem: null

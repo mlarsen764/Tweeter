@@ -10,7 +10,7 @@ export class UserService implements Service {
     alias: string
   ): Promise<User | null> {
     const request: GetUserRequest = {
-      token: authToken.toJson(),
+      token: authToken.token,
       alias
     };
     return this.serverFacade.getUser(request);
@@ -18,7 +18,8 @@ export class UserService implements Service {
 
   public async login(alias: string, password: string): Promise<[User, AuthToken]> {
     const request: LoginRequest = { alias, password };
-    return this.serverFacade.login(request);
+    const [user, token] = await this.serverFacade.login(request);
+    return [user, new AuthToken(token, Date.now())];
   }
 
   public async register(
@@ -29,10 +30,11 @@ export class UserService implements Service {
     userImageBytes: Uint8Array,
     imageFileExtension: string,
   ): Promise<[User, AuthToken]> {
-    return this.serverFacade.register(firstName, lastName, alias, password, userImageBytes, imageFileExtension);
+    const [user, token] = await this.serverFacade.register(firstName, lastName, alias, password, userImageBytes, imageFileExtension);
+    return [user, new AuthToken(token, Date.now())];
   }
 
   public async logout(authToken: AuthToken): Promise<void> {
-    return this.serverFacade.logout(authToken);
+    return this.serverFacade.logout(authToken.token);
   }
 }
