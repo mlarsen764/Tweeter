@@ -1,8 +1,10 @@
 import { RegisterRequest, RegisterResponse } from "tweeter-shared";
 import { UserService } from "../../model/service/UserService";
+import { DynamoDAOFactory } from "../../model/dao/dynamodb/DynamoDAOFactory";
 
 export const handler = async (request: RegisterRequest): Promise<RegisterResponse> => {
-  const userService = new UserService();
+  const daoFactory = new DynamoDAOFactory();
+  const userService = new UserService(daoFactory);
   const userImageBytes = new Uint8Array(Buffer.from(request.userImageBytes, 'base64'));
   const [user, authToken] = await userService.register(
     request.firstName,
