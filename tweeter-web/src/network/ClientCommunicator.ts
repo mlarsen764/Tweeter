@@ -20,16 +20,12 @@ export class ClientCommunicator {
       });
     }
 
-    console.log(`The request body is '${JSON.stringify(req)}'`);
-
     const url = this.getUrl(endpoint);
     const params = this.getParams(
       "POST",
       headers,
       req ? JSON.stringify(req) : req
     );
-
-    console.log(`Fetching '${url}' with params '${JSON.stringify(params)}'`);
 
     try {
       const resp: Response = await fetch(url, params);
@@ -39,11 +35,30 @@ export class ClientCommunicator {
         const response: RES = await resp.json();
         return response;
       } else {
-        const error = await resp.json();
-        throw new Error(error.errorMessage);
+        // Try to parse the error response
+        try {
+          const errorResponse = await resp.json();
+          // If it has an errorMessage field, it's from API Gateway error handling
+          if (errorResponse.errorMessage) {
+            throw new Error(errorResponse.errorMessage);
+          }
+          // If it has success field, it's our structured response
+          if (errorResponse.hasOwnProperty('success')) {
+            return errorResponse as RES;
+          }
+          // Fallback for other error formats
+          throw new Error(errorResponse.message || 'Unknown error');
+        } catch (parseError) {
+          // If we can't parse the error response, throw a generic error
+          throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+        }
       }
     } catch (error) {
       console.error(error);
+      // Don't wrap the error if it's already our custom error
+      if ((error as Error).message.includes('Client communicator')) {
+        throw error;
+      }
       throw new Error(
         `Client communicator ${params.method} failed:\n${
           (error as Error).message

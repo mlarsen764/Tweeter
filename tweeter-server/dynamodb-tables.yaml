@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'DynamoDB tables for Tweeter application'
+
+Resources:
+  TweeterUsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: tweeter-users
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: alias
+          AttributeType: S
+      KeySchema:
+        - AttributeName: alias
+          KeyType: HASH
+
+  TweeterAuthTokensTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: tweeter-auth-tokens
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: token
+          AttributeType: S
+      KeySchema:
+        - AttributeName: token
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  TweeterFollowsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: tweeter-follows
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: followerAlias
+          AttributeType: S
+        - AttributeName: followeeAlias
+          AttributeType: S
+      KeySchema:
+        - AttributeName: followerAlias
+          KeyType: HASH
+        - AttributeName: followeeAlias
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: followeeAlias-followerAlias-index
+          KeySchema:
+            - AttributeName: followeeAlias
+              KeyType: HASH
+            - AttributeName: followerAlias
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  TweeterStoriesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: tweeter-stories
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userAlias
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: userAlias
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+
+  TweeterFeedsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: tweeter-feeds
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userAlias
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: userAlias
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE

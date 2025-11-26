@@ -25,7 +25,7 @@ import {
 import { ClientCommunicator } from "./ClientCommunicator";
 
 export class ServerFacade {
-  private SERVER_URL = "https://q0iodg5ev5.execute-api.us-west-2.amazonaws.com/Stage";
+  private SERVER_URL = "https://q0iodg5ev5.execute-api.us-west-2.amazonaws.com/prod";
   private clientCommunicator = new ClientCommunicator(this.SERVER_URL);
 
   // User operations
@@ -35,7 +35,7 @@ export class ServerFacade {
     );
 
     if (response.success) {
-      const user = User.fromDto(response.user);
+      const user = User.fromDto(response.user!);
       if (user && response.token) {
         return [user, response.token];
       } else {
@@ -72,7 +72,13 @@ export class ServerFacade {
     const response = await this.clientCommunicator.doPost<RegisterRequest, RegisterResponse>(
       request, "/user/create"
     );
-    return [User.fromDto(response.user)!, response.token];
+    
+    if (response.success) {
+      return [User.fromDto(response.user!)!, response.token!];
+    } else {
+      console.error(response);
+      throw new Error(response.message ?? 'Registration failed');
+    }
   }
 
   async logout(token: string): Promise<void> {

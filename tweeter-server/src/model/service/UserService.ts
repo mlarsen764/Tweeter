@@ -19,7 +19,7 @@ export class UserService {
   public async login(alias: string, password: string): Promise<[User, AuthToken]> {
     const user = await this.daoFactory.getUserDAO().getUserByCredentials(alias, password);
     if (!user) {
-      throw new Error("[bad-request] Invalid alias or password");
+      throw new Error("Invalid alias or password");
     }
 
     const tokenString = this.authService.generateToken();
@@ -39,7 +39,7 @@ export class UserService {
   ): Promise<[User, AuthToken]> {
     const existingUser = await this.daoFactory.getUserDAO().getUser(alias);
     if (existingUser) {
-      throw new Error("[bad-request] User already exists");
+      throw new Error("User already exists");
     }
 
     const imageUrl = await this.daoFactory.getS3DAO().uploadImage(userImageBytes, `${alias}.${imageFileExtension}`);
