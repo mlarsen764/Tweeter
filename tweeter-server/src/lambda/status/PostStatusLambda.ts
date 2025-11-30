@@ -1,5 +1,22 @@
 import { PostStatusRequest, PostStatusResponse } from "tweeter-shared";
-import { PostStatusLambda } from "../PostStatusLambda";
+import { BaseLambda } from "../BaseLambda";
+import { StatusService } from "../../model/service/StatusService";
+
+class PostStatusLambda extends BaseLambda<PostStatusRequest, PostStatusResponse> {
+  protected extractToken(request: PostStatusRequest): string {
+    return request.token;
+  }
+
+  protected async executeOperation(request: PostStatusRequest): Promise<PostStatusResponse> {
+    const statusService = new StatusService(this.daoFactory);
+    await statusService.postStatus(request.token, request.newStatus, request.newStatus.user.alias);
+
+    return {
+      success: true,
+      message: "Status was posted."
+    };
+  }
+}
 
 const handlerInstance = new PostStatusLambda();
 export const handler = (request: PostStatusRequest): Promise<PostStatusResponse> => 

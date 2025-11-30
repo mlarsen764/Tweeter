@@ -17,8 +17,13 @@ export class UserService {
   }
 
   public async login(alias: string, password: string): Promise<[User, AuthToken]> {
-    const user = await this.daoFactory.getUserDAO().getUserByCredentials(alias, password);
-    if (!user) {
+    const userWithPassword = await this.daoFactory.getUserDAO().getUserWithPassword(alias);
+    if (!userWithPassword) {
+      throw new Error("Invalid alias or password");
+    }
+
+    const isValidPassword = await this.authService.verifyPassword(password, userWithPassword.hashedPassword);
+    if (!isValidPassword) {
       throw new Error("Invalid alias or password");
     }
 
@@ -26,7 +31,7 @@ export class UserService {
     const authToken = new AuthToken(tokenString, Date.now());
     await this.daoFactory.getAuthTokenDAO().createAuthToken(authToken);
 
-    return [user, authToken];
+    return [userWithPassword.user, authToken];
   }
 
   public async register(

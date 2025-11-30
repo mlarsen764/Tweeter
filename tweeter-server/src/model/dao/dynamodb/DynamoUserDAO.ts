@@ -1,7 +1,6 @@
 import { User } from "tweeter-shared";
 import { UserDAO } from "../UserDAO";
 import { BaseDynamoDAO } from "./BaseDynamoDAO";
-import * as bcrypt from "bcryptjs";
 
 export class DynamoUserDAO extends BaseDynamoDAO implements UserDAO {
   private tableName = "tweeter-users";
@@ -23,12 +22,17 @@ export class DynamoUserDAO extends BaseDynamoDAO implements UserDAO {
     });
   }
 
-  async getUserByCredentials(alias: string, password: string): Promise<User | null> {
+  async getUserWithPassword(alias: string): Promise<{ user: User; hashedPassword: string } | null> {
     const result = await this.get<any>(this.tableName, { alias });
     if (!result) return null;
     
-    const isValid = await bcrypt.compare(password, result.hashedPassword);
-    return isValid ? new User(result.firstName, result.lastName, result.alias, result.imageUrl) : null;
+    const user = new User(result.firstName, result.lastName, result.alias, result.imageUrl);
+    return { user, hashedPassword: result.hashedPassword };
+  }
+
+  async getUserByCredentials(alias: string, password: string): Promise<User | null> {
+    // This method is deprecated - use getUserWithPassword and AuthorizationService instead
+    throw new Error("Use getUserWithPassword and AuthorizationService for credential verification");
   }
 
   async updateUser(user: User): Promise<void> {

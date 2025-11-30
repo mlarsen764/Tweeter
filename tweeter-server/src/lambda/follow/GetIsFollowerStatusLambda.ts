@@ -1,5 +1,23 @@
 import { IsFollowerRequest, IsFollowerResponse } from "tweeter-shared";
-import { IsFollowerLambda } from "../IsFollowerLambda";
+import { BaseLambda } from "../BaseLambda";
+import { FollowService } from "../../model/service/FollowService";
+
+class IsFollowerLambda extends BaseLambda<IsFollowerRequest, IsFollowerResponse> {
+  protected extractToken(request: IsFollowerRequest): string {
+    return request.token;
+  }
+
+  protected async executeOperation(request: IsFollowerRequest): Promise<IsFollowerResponse> {
+    const followService = new FollowService(this.daoFactory);
+    const isFollower = await followService.getIsFollowerStatus(request.token, request.user, request.selectedUser);
+
+    return {
+      success: true,
+      message: null,
+      isFollower: isFollower
+    };
+  }
+}
 
 const handlerInstance = new IsFollowerLambda();
 export const handler = (request: IsFollowerRequest): Promise<IsFollowerResponse> => 
