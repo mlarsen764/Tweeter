@@ -1,73 +1,46 @@
 import { User } from "tweeter-shared";
 import { UserDAO } from "../UserDAO";
-import { DynamoDB } from "aws-sdk";
+import { BaseDynamoDAO } from "./BaseDynamoDAO";
 import * as bcrypt from "bcryptjs";
 
-export class DynamoUserDAO implements UserDAO {
+export class DynamoUserDAO extends BaseDynamoDAO implements UserDAO {
   private tableName = "tweeter-users";
-  private client = new DynamoDB.DocumentClient();
 
   async getUser(alias: string): Promise<User | null> {
-    const params = {
-      TableName: this.tableName,
-      Key: { alias }
-    };
-    
-    const result = await this.client.get(params).promise();
-    return result.Item ? new User(result.Item.firstName, result.Item.lastName, result.Item.alias, result.Item.imageUrl) : null;
+    const result = await this.get<any>(this.tableName, { alias });
+    return result ? new User(result.firstName, result.lastName, result.alias, result.imageUrl) : null;
   }
 
   async createUser(user: User, hashedPassword: string): Promise<void> {
-    const params = {
-      TableName: this.tableName,
-      Item: {
-        alias: user.alias,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        imageUrl: user.imageUrl,
-        hashedPassword,
-        followerCount: 0,
-        followeeCount: 0
-      }
-    };
-    
-    await this.client.put(params).promise();
+    await this.put(this.tableName, {
+      alias: user.alias,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      imageUrl: user.imageUrl,
+      hashedPassword,
+      followerCount: 0,
+      followeeCount: 0
+    });
   }
 
   async getUserByCredentials(alias: string, password: string): Promise<User | null> {
-    const params = {
-      TableName: this.tableName,
-      Key: { alias }
-    };
+    const result = await this.get<any>(this.tableName, { alias });
+    if (!result) return null;
     
-    const result = await this.client.get(params).promise();
-    if (!result.Item) return null;
-    
-    const isValid = await bcrypt.compare(password, result.Item.hashedPassword);
-    return isValid ? new User(result.Item.firstName, result.Item.lastName, result.Item.alias, result.Item.imageUrl) : null;
+    const isValid = await bcrypt.compare(password, result.hashedPassword);
+    return isValid ? new User(result.firstName, result.lastName, result.alias, result.imageUrl) : null;
   }
 
   async updateUser(user: User): Promise<void> {
-    const params = {
-      TableName: this.tableName,
-      Key: { alias: user.alias },
-      UpdateExpression: "SET firstName = :fn, lastName = :ln, imageUrl = :img",
-      ExpressionAttributeValues: {
-        ":fn": user.firstName,
-        ":ln": user.lastName,
-        ":img": user.imageUrl
-      }
-    };
-    
-    await this.client.update(params).promise();
+    await this.update(
+      this.tableName,
+      { alias: user.alias },
+      "SET firstName = :fn, lastName = :ln, imageUrl = :img",
+      { ":fn": user.firstName, ":ln": user.lastName, ":img": user.imageUrl }
+    );
   }
 
   async deleteUser(alias: string): Promise<void> {
-    const params = {
-      TableName: this.tableName,
-      Key: { alias }
-    };
-    
-    await this.client.delete(params).promise();
+    await this.delete(this.tableName, { alias });
   }
 }

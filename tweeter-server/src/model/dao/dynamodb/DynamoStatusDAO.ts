@@ -1,29 +1,24 @@
 import { Status, User } from "tweeter-shared";
 import { StatusDAO } from "../StatusDAO";
-import { DynamoDB } from "aws-sdk";
+import { BaseDynamoDAO } from "./BaseDynamoDAO";
 
-export class DynamoStatusDAO implements StatusDAO {
+export class DynamoStatusDAO extends BaseDynamoDAO implements StatusDAO {
   private storyTableName = "tweeter-stories";
   private feedTableName = "tweeter-feeds";
-  private client = new DynamoDB.DocumentClient();
 
   async createStatus(status: Status): Promise<void> {
-    const params = {
-      TableName: this.storyTableName,
-      Item: {
-        userAlias: status.user.alias,
-        timestamp: status.timestamp,
-        post: status.post,
-        user_firstName: status.user.firstName,
-        user_lastName: status.user.lastName,
-        user_imageUrl: status.user.imageUrl
-      }
-    };
-    await this.client.put(params).promise();
+    await this.put(this.storyTableName, {
+      userAlias: status.user.alias,
+      timestamp: status.timestamp,
+      post: status.post,
+      user_firstName: status.user.firstName,
+      user_lastName: status.user.lastName,
+      user_imageUrl: status.user.imageUrl
+    });
   }
 
   async getStory(userAlias: string, limit: number, lastStatusTimestamp?: number): Promise<[Status[], boolean]> {
-    const params: DynamoDB.DocumentClient.QueryInput = {
+    const params: any = {
       TableName: this.storyTableName,
       KeyConditionExpression: "userAlias = :alias",
       ExpressionAttributeValues: { ":alias": userAlias },
@@ -38,7 +33,7 @@ export class DynamoStatusDAO implements StatusDAO {
       };
     }
 
-    const result = await this.client.query(params).promise();
+    const result = await this.query(params);
     const statuses = (result.Items || []).map(item => {
       const user = new User(item.user_firstName, item.user_lastName, item.userAlias, item.user_imageUrl);
       return new Status(item.post, user, item.timestamp);
@@ -47,7 +42,7 @@ export class DynamoStatusDAO implements StatusDAO {
   }
 
   async getFeed(userAlias: string, limit: number, lastStatusTimestamp?: number): Promise<[Status[], boolean]> {
-    const params: DynamoDB.DocumentClient.QueryInput = {
+    const params: any = {
       TableName: this.feedTableName,
       KeyConditionExpression: "userAlias = :alias",
       ExpressionAttributeValues: { ":alias": userAlias },
@@ -62,7 +57,7 @@ export class DynamoStatusDAO implements StatusDAO {
       };
     }
 
-    const result = await this.client.query(params).promise();
+    const result = await this.query(params);
     const statuses = (result.Items || []).map(item => {
       const user = new User(item.user_firstName, item.user_lastName, item.authorAlias, item.user_imageUrl);
       return new Status(item.post, user, item.timestamp);

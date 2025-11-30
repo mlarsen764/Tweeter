@@ -1,21 +1,17 @@
-import { FollowRequest, FollowResponse, } from "tweeter-shared";
+import { FollowRequest, FollowResponse } from "tweeter-shared";
+import { FollowActionLambda } from "../FollowActionLambda";
 import { FollowService } from "../../model/service/FollowService";
-import { DynamoDAOFactory } from "../../model/dao/dynamodb/DynamoDAOFactory";
-import { AuthorizationService } from "../../model/service/auth/AuthorizationService";
 
-export const handler = async (request: FollowRequest): Promise<FollowResponse> => {
-  const daoFactory = new DynamoDAOFactory();
-  const authService = new AuthorizationService(daoFactory.getAuthTokenDAO());
-  
-  await authService.validateToken(request.token);
-  
-  const followService = new FollowService(daoFactory);
-  const [followerCount, followeeCount] = await followService.unfollow(request.token, request.userToFollow, request.user.alias);
+class UnfollowHandler extends FollowActionLambda {
+  protected async performAction(followService: FollowService, request: FollowRequest): Promise<[number, number]> {
+    return await followService.unfollow(request.token, request.userToFollow, request.user.alias);
+  }
 
-  return {
-    success: true,
-    message: "Unfollowed User",
-    followerCount: followerCount,
-    followeeCount: followeeCount
+  protected getSuccessMessage(): string {
+    return "Unfollowed User";
   }
 }
+
+const handlerInstance = new UnfollowHandler();
+export const handler = (request: FollowRequest): Promise<FollowResponse> => 
+  handlerInstance.handle(request);

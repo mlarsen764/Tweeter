@@ -19,20 +19,10 @@ export const handler = async (request: LoginRequest): Promise<LoginResponse> => 
     
     // Check if it's an invalid credentials error
     if (errorMessage.includes("Invalid alias or password")) {
-      return {
-        success: false,
-        message: "Invalid username or password. Please check your credentials and try again.",
-        user: null,
-        token: null
-      }
+      throw new Error("[unauthorized] Invalid username or password. Please check your credentials and try again.");
     }
     
-    // For other errors, return a generic message
-    return {
-      success: false,
-      message: "An error occurred during login. Please try again.",
-      user: null,
-      token: null
-    }
+    // For other errors, throw with internal server error prefix
+    throw new Error("[internal-server-error] An error occurred during login. Please try again.");
   }
 }

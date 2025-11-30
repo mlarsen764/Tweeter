@@ -37,6 +37,10 @@ export class UserService {
     userImageBytes: Uint8Array,
     imageFileExtension: string,
   ): Promise<[User, AuthToken]> {
+    if (!/^@[a-zA-Z0-9_]+$/.test(alias)) {
+      throw new Error("Alias can only contain letters, numbers, and underscores");
+    }
+
     const existingUser = await this.daoFactory.getUserDAO().getUser(alias);
     if (existingUser) {
       throw new Error("User already exists");

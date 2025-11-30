@@ -1,20 +1,13 @@
-import { FollowCountRequest, FollowCountResponse, } from "tweeter-shared";
+import { FollowCountRequest, FollowCountResponse } from "tweeter-shared";
+import { FollowCountLambda } from "../FollowCountLambda";
 import { FollowService } from "../../model/service/FollowService";
-import { DynamoDAOFactory } from "../../model/dao/dynamodb/DynamoDAOFactory";
-import { AuthorizationService } from "../../model/service/auth/AuthorizationService";
 
-export const handler = async (request: FollowCountRequest): Promise<FollowCountResponse> => {
-  const daoFactory = new DynamoDAOFactory();
-  const authService = new AuthorizationService(daoFactory.getAuthTokenDAO());
-  
-  await authService.validateToken(request.token);
-  
-  const followService = new FollowService(daoFactory);
-  const count = await followService.getFollowerCount(request.token, request.user);
-
-  return {
-    success: true,
-    message: null,
-    count: count
+class GetFollowerCountHandler extends FollowCountLambda {
+  protected async getCount(followService: FollowService, request: FollowCountRequest): Promise<number> {
+    return await followService.getFollowerCount(request.token, request.user);
   }
 }
+
+const handlerInstance = new GetFollowerCountHandler();
+export const handler = (request: FollowCountRequest): Promise<FollowCountResponse> => 
+  handlerInstance.handle(request);

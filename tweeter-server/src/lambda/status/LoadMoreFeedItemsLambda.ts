@@ -1,21 +1,13 @@
-import { PagedStatusItemRequest, PagedStatusItemResponse, AuthToken, Status } from "tweeter-shared";
+import { PagedStatusItemRequest, PagedStatusItemResponse, StatusDto } from "tweeter-shared";
+import { PagedStatusLambda } from "../PagedStatusLambda";
 import { StatusService } from "../../model/service/StatusService";
-import { DynamoDAOFactory } from "../../model/dao/dynamodb/DynamoDAOFactory";
-import { AuthorizationService } from "../../model/service/auth/AuthorizationService";
 
-export const handler = async (request: PagedStatusItemRequest): Promise<PagedStatusItemResponse> => {
-  const daoFactory = new DynamoDAOFactory();
-  const authService = new AuthorizationService(daoFactory.getAuthTokenDAO());
-  
-  await authService.validateToken(request.token);
-  
-  const statusService = new StatusService(daoFactory);
-  const [items, hasMore] = await statusService.loadMoreFeedItems(request.token, request.userAlias, request.pageSize, request.lastItem);
-
-  return {
-    success: true,
-    message: null,
-    items: items,
-    hasMore: hasMore
+class LoadMoreFeedItemsHandler extends PagedStatusLambda {
+  protected async getPagedStatuses(statusService: StatusService, request: PagedStatusItemRequest): Promise<[StatusDto[], boolean]> {
+    return await statusService.loadMoreFeedItems(request.token, request.userAlias, request.pageSize, request.lastItem);
   }
 }
+
+const handlerInstance = new LoadMoreFeedItemsHandler();
+export const handler = (request: PagedStatusItemRequest): Promise<PagedStatusItemResponse> => 
+  handlerInstance.handle(request);

@@ -26,19 +26,13 @@ export const handler = async (request: RegisterRequest): Promise<RegisterRespons
     const errorMessage = (error as Error).message || 'Unknown error';
     
     if (errorMessage.includes("User already exists")) {
-      return {
-        success: false,
-        message: "A user with this alias already exists. Please choose a different alias.",
-        user: null,
-        token: null
-      }
+      throw new Error("[bad-request] A user with this alias already exists. Please choose a different alias.");
     }
     
-    return {
-      success: false,
-      message: "Registration failed. Please try again.",
-      user: null,
-      token: null
+    if (errorMessage.includes("Alias can only contain")) {
+      throw new Error("[bad-request] Alias can only contain letters, numbers, and underscores.");
     }
+    
+    throw new Error("[internal-server-error] Registration failed. Please try again.");
   }
 }

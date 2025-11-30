@@ -13,11 +13,7 @@ export const handler = async (request: GetUserRequest): Promise<GetUserResponse>
   const user = await userService.getUser(request.token, request.alias);
 
   if (!user) {
-    return {
-      success: false,
-      message: "User not found",
-      user: null
-    }
+    throw new Error("[bad-request] User not found");
   }
 
   return {

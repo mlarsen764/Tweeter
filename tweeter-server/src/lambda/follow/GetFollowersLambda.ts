@@ -1,21 +1,13 @@
-import { PagedUserItemRequest, PagedUserItemResponse } from "tweeter-shared";
+import { PagedUserItemRequest, PagedUserItemResponse, UserDto } from "tweeter-shared";
+import { PagedUserLambda } from "../PagedUserLambda";
 import { FollowService } from "../../model/service/FollowService";
-import { DynamoDAOFactory } from "../../model/dao/dynamodb/DynamoDAOFactory";
-import { AuthorizationService } from "../../model/service/auth/AuthorizationService";
 
-export const handler = async (request: PagedUserItemRequest): Promise<PagedUserItemResponse> => {
-  const daoFactory = new DynamoDAOFactory();
-  const authService = new AuthorizationService(daoFactory.getAuthTokenDAO());
-  
-  await authService.validateToken(request.token);
-  
-  const followService = new FollowService(daoFactory);
-  const [items, hasMore] = await followService.loadMoreFollowers(request.token, request.userAlias, request.pageSize, request.lastItem);
-
-  return {
-    success: true,
-    message: null,
-    items: items,
-    hasMore: hasMore
+class GetFollowersHandler extends PagedUserLambda {
+  protected async getPagedUsers(followService: FollowService, request: PagedUserItemRequest): Promise<[UserDto[], boolean]> {
+    return await followService.loadMoreFollowers(request.token, request.userAlias, request.pageSize, request.lastItem);
   }
 }
+
+const handlerInstance = new GetFollowersHandler();
+export const handler = (request: PagedUserItemRequest): Promise<PagedUserItemResponse> => 
+  handlerInstance.handle(request);

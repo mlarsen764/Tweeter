@@ -35,35 +35,32 @@ export class ClientCommunicator {
         const response: RES = await resp.json();
         return response;
       } else {
-        // Try to parse the error response
-        try {
-          const errorResponse = await resp.json();
-          // If it has an errorMessage field, it's from API Gateway error handling
-          if (errorResponse.errorMessage) {
-            throw new Error(errorResponse.errorMessage);
+        let message = `HTTP ${resp.status}: ${resp.statusText}`;
+        
+        const text = await resp.text();
+        
+        if (text) {
+          try {
+            const errorResponse = JSON.parse(text);
+            
+            if (errorResponse.error) {
+              message = errorResponse.error;
+            } else if (errorResponse.errorMessage) {
+              message = errorResponse.errorMessage;
+            } else if (errorResponse.message) {
+              message = errorResponse.message;
+            }
+          } catch (parseError) {
+            // Fall back to raw text if it's not JSON
+            message = text || message;
           }
-          // If it has success field, it's our structured response
-          if (errorResponse.hasOwnProperty('success')) {
-            return errorResponse as RES;
-          }
-          // Fallback for other error formats
-          throw new Error(errorResponse.message || 'Unknown error');
-        } catch (parseError) {
-          // If we can't parse the error response, throw a generic error
-          throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
         }
+        
+        throw new Error(message);
       }
     } catch (error) {
       console.error(error);
-      // Don't wrap the error if it's already our custom error
-      if ((error as Error).message.includes('Client communicator')) {
-        throw error;
-      }
-      throw new Error(
-        `Client communicator ${params.method} failed:\n${
-          (error as Error).message
-        }`
-      );
+      throw error as Error;
     }
   }
 
