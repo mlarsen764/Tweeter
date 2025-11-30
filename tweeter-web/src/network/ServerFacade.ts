@@ -189,9 +189,10 @@ export class ServerFacade {
     return response.count;
   }
 
-  async follow(token: string, userToFollow: User): Promise<[number, number]> {
+  async follow(token: string, userToFollow: User, currentUser: User): Promise<[number, number]> {
     const request: FollowRequest = {
       token,
+      user: currentUser.dto,
       userToFollow: userToFollow.dto
     };
     const response = await this.clientCommunicator.doPost<FollowRequest, FollowResponse>(
@@ -200,9 +201,10 @@ export class ServerFacade {
     return [response.followerCount, response.followeeCount];
   }
 
-  async unfollow(token: string, userToUnfollow: User): Promise<[number, number]> {
+  async unfollow(token: string, userToUnfollow: User, currentUser: User): Promise<[number, number]> {
     const request: FollowRequest = {
       token,
+      user: currentUser.dto,
       userToFollow: userToUnfollow.dto
     };
     const response = await this.clientCommunicator.doPost<FollowRequest, FollowResponse>(

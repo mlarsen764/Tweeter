@@ -67,16 +67,18 @@ export class FollowService implements Service {
   public async follow(
     authToken: AuthToken,
     userToFollow: User,
+    currentUser: User
   ): Promise<[followerCount: number, followeeCount: number]> {
     const token = authToken.token
-    return this.serverFacade.follow(token, userToFollow);
+    return this.serverFacade.follow(token, userToFollow, currentUser);
   }
 
   public async unfollow(
     authToken: AuthToken,
     userToUnfollow: User,
+    currentUser: User
   ): Promise<[followerCount: number, followeeCount: number]> {
     const token = authToken.token
-    return this.serverFacade.unfollow(token, userToUnfollow);
+    return this.serverFacade.unfollow(token, userToUnfollow, currentUser);
   }
 }

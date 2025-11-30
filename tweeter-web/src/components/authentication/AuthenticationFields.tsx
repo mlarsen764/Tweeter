@@ -13,6 +13,14 @@ const AuthenticationFields = ({
   onPasswordChange,
   onKeyDown,
 }: Props) => {
+  const handleAliasChange = (value: string) => {
+    if (value && !value.startsWith('@')) {
+      onAliasChange('@' + value);
+    } else {
+      onAliasChange(value);
+    }
+  };
+
   return (
     <>
       <div className="form-floating">
@@ -22,10 +30,10 @@ const AuthenticationFields = ({
           size={50}
           id="aliasInput"
           aria-label="alias"
-          placeholder="name@example.com"
+          placeholder="@username"
           value={alias}
           onKeyDown={onKeyDown}
-          onChange={(event) => onAliasChange(event.target.value)}
+          onChange={(event) => handleAliasChange(event.target.value)}
         />
         <label htmlFor="aliasInput">Alias</label>
       </div>

@@ -1,6 +1,12 @@
 import { AuthToken, User, FakeData, UserDto } from "tweeter-shared";
+import { DAOFactory } from "../dao/DAOFactory";
 
 export class FollowService {
+  private daoFactory: DAOFactory;
+
+  constructor(daoFactory: DAOFactory) {
+    this.daoFactory = daoFactory;
+  }
 
   public async loadMoreFollowees(
     token: string,
@@ -8,8 +14,9 @@ export class FollowService {
     pageSize: number,
     lastItem: UserDto | null
   ): Promise<[UserDto[], boolean]> {
-    // TODO: Replace with the result of calling server
-    return this.getFakeData(lastItem, pageSize, userAlias);
+    const followDAO = this.daoFactory.getFollowDAO();
+    const [users, hasMore] = await followDAO.getFollowees(userAlias, pageSize, lastItem?.alias);
+    return [users.map(user => user.dto), hasMore];
   };
 
   public async loadMoreFollowers(
@@ -18,8 +25,9 @@ export class FollowService {
     pageSize: number,
     lastItem: UserDto | null
   ): Promise<[UserDto[], boolean]> {
-    // TODO: Replace with the result of calling server
-    return this.getFakeData(lastItem, pageSize, userAlias);
+    const followDAO = this.daoFactory.getFollowDAO();
+    const [users, hasMore] = await followDAO.getFollowers(userAlias, pageSize, lastItem?.alias);
+    return [users.map(user => user.dto), hasMore];
   };
 
   private async getFakeData(lastItem: UserDto | null, pageSize: number, userAlias: string): Promise<[UserDto[], boolean]> {
@@ -33,37 +41,37 @@ export class FollowService {
     user: UserDto,
     selectedUser: UserDto,
   ): Promise<boolean> {
-    // TODO: Replace with the result of calling server
-    return FakeData.instance.isFollower();
+    const followDAO = this.daoFactory.getFollowDAO();
+    return await followDAO.isFollower(user.alias, selectedUser.alias);
   }
 
   public async getFolloweeCount(
     token: string,
     user: UserDto,
   ): Promise<number> {
-    // TODO: Replace with the result of calling server
-    return FakeData.instance.getFolloweeCount(user.alias);
+    const followDAO = this.daoFactory.getFollowDAO();
+    return await followDAO.getFolloweeCount(user.alias);
   }
 
   public async getFollowerCount(
     token: string,
     user: UserDto,
   ): Promise<number> {
-    // TODO: Replace with the result of calling server
-    return FakeData.instance.getFollowerCount(user.alias);
+    const followDAO = this.daoFactory.getFollowDAO();
+    return await followDAO.getFollowerCount(user.alias);
   }
 
   public async follow(
     token: string,
     userToFollow: UserDto,
+    userAlias: string
   ): Promise<[followerCount: number, followeeCount: number]> {
-    // Pause so we can see the follow message. Remove when connected to the server
-    await new Promise((f) => setTimeout(f, 2000));
-
-    // TODO: Call the server
+    const followDAO = this.daoFactory.getFollowDAO();
+    await followDAO.follow(userAlias, userToFollow.alias);
 
     const followerCount = await this.getFollowerCount(token, userToFollow);
-    const followeeCount = await this.getFolloweeCount(token, userToFollow);
+    const currentUserDto = { alias: userAlias } as UserDto;
+    const followeeCount = await this.getFolloweeCount(token, currentUserDto);
 
     return [followerCount, followeeCount];
   }
@@ -71,14 +79,14 @@ export class FollowService {
   public async unfollow(
     token: string,
     userToUnfollow: UserDto,
+    userAlias: string
   ): Promise<[followerCount: number, followeeCount: number]> {
-    // Pause so we can see the unfollow message. Remove when connected to the server
-    await new Promise((f) => setTimeout(f, 2000));
-
-    // TODO: Call the server
+    const followDAO = this.daoFactory.getFollowDAO();
+    await followDAO.unfollow(userAlias, userToUnfollow.alias);
 
     const followerCount = await this.getFollowerCount(token, userToUnfollow);
-    const followeeCount = await this.getFolloweeCount(token, userToUnfollow);
+    const currentUserDto = { alias: userAlias } as UserDto;
+    const followeeCount = await this.getFolloweeCount(token, currentUserDto);
 
     return [followerCount, followeeCount];
   }

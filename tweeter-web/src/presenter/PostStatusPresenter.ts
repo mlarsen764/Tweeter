@@ -4,6 +4,7 @@ import { Presenter, LoadingView } from "./Presenter";
 
 export interface PostStatusView extends LoadingView {
   setPost: (post: string) => void;
+  bumpStoryVersion?: () => void;
 }
 
 export class PostStatusPresenter extends Presenter<PostStatusView> {
@@ -31,6 +32,14 @@ export class PostStatusPresenter extends Presenter<PostStatusView> {
       this.view.displayInfoMessage("Status posted!", 2000);
       this.view.deleteMessage(postingStatusToastId);
       this.view.setIsLoading(false);
+      
+      // Refresh story to show new post immediately
+      if (this.view.bumpStoryVersion) {
+        console.log('Bumping story version after post');
+        this.view.bumpStoryVersion();
+      } else {
+        console.log('No story version bump function available');
+      }
     }, "post the status");
   }
 

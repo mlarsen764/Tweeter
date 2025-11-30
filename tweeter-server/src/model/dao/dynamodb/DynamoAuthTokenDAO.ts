@@ -11,7 +11,6 @@ export class DynamoAuthTokenDAO implements AuthTokenDAO {
       TableName: this.tableName,
       Item: {
         token: token.token,
-        userAlias: token.token.split('-')[0], // Extract user from token if needed
         timestamp: token.timestamp,
         ttl: Math.floor((token.timestamp + 24 * 60 * 60 * 1000) / 1000) // 24 hours TTL
       }

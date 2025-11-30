@@ -1,15 +1,28 @@
 import { GetUserRequest, GetUserResponse, AuthToken } from "tweeter-shared";
 import { UserService } from "../../model/service/UserService";
 import { DynamoDAOFactory } from "../../model/dao/dynamodb/DynamoDAOFactory";
+import { AuthorizationService } from "../../model/service/auth/AuthorizationService";
 
 export const handler = async (request: GetUserRequest): Promise<GetUserResponse> => {
   const daoFactory = new DynamoDAOFactory();
+  const authService = new AuthorizationService(daoFactory.getAuthTokenDAO());
+  
+  await authService.validateToken(request.token);
+  
   const userService = new UserService(daoFactory);
   const user = await userService.getUser(request.token, request.alias);
+
+  if (!user) {
+    return {
+      success: false,
+      message: "User not found",
+      user: null
+    }
+  }
 
   return {
     success: true,
     message: null,
-    user: user ? user.dto : null
+    user: user.dto
   }
 }

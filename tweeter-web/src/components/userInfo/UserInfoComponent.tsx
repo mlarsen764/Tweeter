@@ -58,12 +58,12 @@ const UserInfo = () => {
 
   const followDisplayedUser = async (event: React.MouseEvent): Promise<void> => {
     event.preventDefault();
-    await presenterRef.current!.followDisplayedUser(authToken!, displayedUser!);
+    await presenterRef.current!.followDisplayedUser(authToken!, displayedUser!, currentUser!);
   };
 
   const unfollowDisplayedUser = async (event: React.MouseEvent): Promise<void> => {
     event.preventDefault();
-    await presenterRef.current!.unfollowDisplayedUser(authToken!, displayedUser!);
+    await presenterRef.current!.unfollowDisplayedUser(authToken!, displayedUser!, currentUser!);
   };
 
   return (

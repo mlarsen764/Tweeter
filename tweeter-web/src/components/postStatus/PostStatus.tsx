@@ -2,6 +2,7 @@ import "./PostStatus.css";
 import { useState, useRef } from "react";
 import { useMessageActions } from "../toaster/MessageHooks";
 import { useUserInfo } from "../userInfo/UserInfoHooks";
+import { useStoryRefresh } from "../story/StoryContext";
 import { PostStatusPresenter, PostStatusView } from "../../presenter/PostStatusPresenter";
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 
 const PostStatus = (props: Props) => {
   const { displayInfoMessage, displayErrorMessage, deleteMessage } = useMessageActions();
+  const { bumpStoryVersion } = useStoryRefresh();
 
   const { currentUser, authToken } = useUserInfo();
   const [post, setPost] = useState("");
@@ -20,7 +22,8 @@ const PostStatus = (props: Props) => {
     setIsLoading: setIsLoading,
     displayInfoMessage: displayInfoMessage,
     displayErrorMessage: displayErrorMessage,
-    deleteMessage: deleteMessage
+    deleteMessage: deleteMessage,
+    bumpStoryVersion: bumpStoryVersion
   };
 
   const presenterRef = useRef<PostStatusPresenter | null>(null);

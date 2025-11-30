@@ -64,21 +64,25 @@ export class UserInfoPresenter extends Presenter<UserInfoView> {
     this.view.navigate(`${baseUrl}/${currentUser.alias}`);
   }
 
-  public async followDisplayedUser(authToken: AuthToken, displayedUser: User): Promise<void> {
+  public async followDisplayedUser(authToken: AuthToken, displayedUser: User, currentUser: User): Promise<void> {
     this.updateFollowStatus(
-      () => this.followService.follow(authToken, displayedUser),
+      () => this.followService.follow(authToken, displayedUser, currentUser),
       true,
       `Following ${displayedUser.name}...`,
-      "follow user"
+      "follow user",
+      displayedUser,
+      currentUser
     );
   }
 
-  public async unfollowDisplayedUser(authToken: AuthToken, displayedUser: User): Promise<void> {
+  public async unfollowDisplayedUser(authToken: AuthToken, displayedUser: User, currentUser: User): Promise<void> {
     this.updateFollowStatus(
-      () => this.followService.unfollow(authToken, displayedUser),
+      () => this.followService.unfollow(authToken, displayedUser, currentUser),
       false,
       `Unfollowing ${displayedUser.name}...`,
-      "unfollow user"
+      "unfollow user",
+      displayedUser,
+      currentUser
     );
   }
 
@@ -86,7 +90,9 @@ export class UserInfoPresenter extends Presenter<UserInfoView> {
     followOperation: () => Promise<[number, number]>,
     isFollower: boolean,
     toastMessage: string,
-    operationDescription: string
+    operationDescription: string,
+    displayedUser: User,
+    currentUser: User
   ): Promise<void> {
     let toast = "";
     await this.doFailureReportingOperationWithCleanup(
@@ -98,7 +104,9 @@ export class UserInfoPresenter extends Presenter<UserInfoView> {
 
         this.view.setIsFollower(isFollower);
         this.view.setFollowerCount(followerCount);
-        this.view.setFolloweeCount(followeeCount);
+        if (displayedUser.equals(currentUser)) {
+          this.view.setFolloweeCount(followeeCount);
+        }
       },
       () => {
         this.view.deleteMessage(toast);

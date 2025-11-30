@@ -15,6 +15,7 @@ import StatusItem from "./components/statusItem/StatusItem";
 import UserItem from "./components/userItem/UserItem";
 import { useUserNavigationHook } from "./components/userItem/UserNavigationHook";
 import { useUserInfo } from "./components/userInfo/UserInfoHooks";
+import { StoryProvider, useStoryRefresh } from "./components/story/StoryContext";
 import { FolloweePresenter } from "./presenter/FolloweePresenter";
 import { FollowerPresenter } from "./presenter/FollowerPresenter";
 import { FeedPresenter } from "./presenter/FeedPresenter";
@@ -48,43 +49,45 @@ const AuthenticatedRoutes = () => {
   const { displayedUser } = useUserInfo();
 
   return (
-    <Routes>
-      <Route element={<MainLayout />}>
-        <Route
-          index
-          element={<Navigate to={`/feed/${displayedUser!.alias}`} />}
-        />
-        <Route
-          path="feed/:displayedUser"
-          element={
-            <FeedRoute key={`feed-${displayedUser!.alias}`} />
-          }
-        />
-        <Route
-          path="story/:displayedUser"
-          element={
-            <StoryRoute key={`story-${displayedUser!.alias}`} />
-          }
-        />
-        <Route
-          path="followees/:displayedUser"
-          element={
-            <FolloweesRoute key={`followees-${displayedUser!.alias}`} />
-          }
-        />
-        <Route
-          path="followers/:displayedUser"
-          element={
-            <FollowersRoute key={`followers-${displayedUser!.alias}`} />
-          }
-        />
-        <Route path="logout" element={<Navigate to="/login" />} />
-        <Route
-          path="*"
-          element={<Navigate to={`/feed/${displayedUser!.alias}`} />}
-        />
-      </Route>
-    </Routes>
+    <StoryProvider>
+      <Routes>
+        <Route element={<MainLayout />}>
+          <Route
+            index
+            element={<Navigate to={`/feed/${displayedUser!.alias}`} />}
+          />
+          <Route
+            path="feed/:displayedUser"
+            element={
+              <FeedRoute key={`feed-${displayedUser!.alias}`} />
+            }
+          />
+          <Route
+            path="story/:displayedUser"
+            element={
+              <StoryRoute key={`story-${displayedUser!.alias}`} />
+            }
+          />
+          <Route
+            path="followees/:displayedUser"
+            element={
+              <FolloweesRoute key={`followees-${displayedUser!.alias}`} />
+            }
+          />
+          <Route
+            path="followers/:displayedUser"
+            element={
+              <FollowersRoute key={`followers-${displayedUser!.alias}`} />
+            }
+          />
+          <Route path="logout" element={<Navigate to="/login" />} />
+          <Route
+            path="*"
+            element={<Navigate to={`/feed/${displayedUser!.alias}`} />}
+          />
+        </Route>
+      </Routes>
+    </StoryProvider>
   );
 };
 
@@ -113,7 +116,10 @@ const ItemRoute = <T,>({ featureUrl, presenterFactory, renderItem }: { featureUr
 };
 
 const FeedRoute = () => <ItemRoute<Status> featureUrl="/feed" presenterFactory={(view: PagedItemView<Status>) => new FeedPresenter(view)} renderItem={(status, index, featureUrl, navigateToUser) => <StatusItem key={index} status={status} featurePath={featureUrl} onNavigateToUser={navigateToUser!} />} />;
-const StoryRoute = () => <ItemRoute<Status> featureUrl="/story" presenterFactory={(view: PagedItemView<Status>) => new StoryPresenter(view)} renderItem={(status, index, featureUrl, navigateToUser) => <StatusItem key={index} status={status} featurePath={featureUrl} onNavigateToUser={navigateToUser!} />} />;
+const StoryRoute = () => {
+  const { storyVersion } = useStoryRefresh();
+  return <ItemRoute<Status> key={`story-${storyVersion}`} featureUrl="/story" presenterFactory={(view: PagedItemView<Status>) => new StoryPresenter(view)} renderItem={(status, index, featureUrl, navigateToUser) => <StatusItem key={index} status={status} featurePath={featureUrl} onNavigateToUser={navigateToUser!} />} />;
+};
 const FolloweesRoute = () => <ItemRoute<User> featureUrl="/followees" presenterFactory={(view: PagedItemView<User>) => new FolloweePresenter(view)} renderItem={(user, index) => <div key={index} className="row mb-3 mx-0 px-0 border rounded bg-white"><UserItem user={user} featurePath="/followees" /></div>} />;
 const FollowersRoute = () => <ItemRoute<User> featureUrl="/followers" presenterFactory={(view: PagedItemView<User>) => new FollowerPresenter(view)} renderItem={(user, index) => <div key={index} className="row mb-3 mx-0 px-0 border rounded bg-white"><UserItem user={user} featurePath="/followers" /></div>} />;
 
